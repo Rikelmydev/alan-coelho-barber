@@ -1,35 +1,42 @@
 // Textos e fotos da página. Serviços, preços e durações ficam em booking.ts.
 // Fotos são provisórias (Unsplash): substitua por fotos reais do trabalho do Alan.
 
-import { bookingServices, formatDuration, formatPrice } from "./booking";
+import { bookingServices, featuredServiceId, formatDuration, formatPrice } from "./booking";
 
 const unsplash = (id: string, w = 1600) =>
   `https://images.unsplash.com/photo-${id}?w=${w}&q=85&fm=jpg`;
 
 export type Service = {
+  id: string;
   name: string;
-  description: string;
   duration: string;
   price: string;
 };
 
 const toDisplay = (s: (typeof bookingServices)[number]): Service => ({
+  id: s.id,
   name: s.name,
-  description: s.description,
   duration: formatDuration(s.durationMin),
   price: formatPrice(s.price),
 });
 
-// O primeiro serviço de booking.ts vira o card de destaque.
-const [first, ...rest] = bookingServices;
+const featured = bookingServices.find((s) => s.id === featuredServiceId) ?? bookingServices[0];
 
-export const featuredService: Service & { image: string; imageAlt: string } = {
-  ...toDisplay(first),
+export const featuredService = {
+  ...toDisplay(featured),
+  description: "Corte e barba no mesmo atendimento, com acabamento na navalha.",
   image: unsplash("1599011176306-4a96f1516d4d", 1400),
   imageAlt: "Barbeiro aparando a barba de um cliente com tesoura",
 };
 
-export const services: Service[] = rest.slice(0, 4).map(toDisplay);
+// Tabela de preços: os demais serviços, agrupados
+export const serviceGroups = [
+  { title: "Cortes e combos", category: "combo" },
+  { title: "Avulsos", category: "avulso" },
+].map((g) => ({
+  title: g.title,
+  items: bookingServices.filter((s) => s.category === g.category && s.id !== featured.id).map(toDisplay),
+}));
 
 export const hero = {
   image: unsplash("1599351431202-1e0f0137899a", 1400),

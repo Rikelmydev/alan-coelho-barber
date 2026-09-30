@@ -18,6 +18,10 @@ import { icons, type IconName } from "./icons";
 
 const STEPS = ["Serviço", "Profissional", "Data e horário", "Seus dados", "Confirmação"] as const;
 const SUCCESS = STEPS.length;
+const SERVICE_GROUPS = [
+  { title: "Cortes e combos", category: "combo" },
+  { title: "Avulsos", category: "avulso" },
+] as const;
 const STORAGE_KEY = "acb-cliente";
 
 type Slots =
@@ -29,7 +33,7 @@ type Submit = { status: "idle" | "sending" } | { status: "error"; message: strin
 declare global {
   interface Window {
     __bookingReady?: boolean;
-    __bookingQueued?: boolean;
+    __bookingQueued?: boolean | string; // true, ou o id do serviço tocado antes do fluxo carregar
   }
 }
 
@@ -102,17 +106,19 @@ export default function BookingApp() {
   const phoneOk = [10, 11].includes(phone.replace(/\D/g, "").length);
 
   // ---------- Abrir e fechar ----------
-  const openModal = (trigger?: HTMLElement | null) => {
+  const openModal = (trigger?: HTMLElement | null, presetServiceId?: string) => {
     if (openRef.current) return;
     triggerRef.current = trigger ?? (document.activeElement as HTMLElement | null);
+    // Botões de um serviço específico (tabela de preços) já abrem com ele escolhido
+    const preset = bookingServices.find((s) => s.id === (presetServiceId ?? trigger?.dataset.bookingService));
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
       if (saved?.name) setName(saved.name);
       if (saved?.phone) setPhone(maskPhone(saved.phone));
     } catch {}
-    setStep(0);
+    setStep(preset ? 1 : 0);
     setDir("fwd");
-    setServiceId(undefined);
+    setServiceId(preset?.id);
     setProId(undefined);
     setDate(undefined);
     setTime(undefined);
@@ -147,9 +153,10 @@ export default function BookingApp() {
     document.addEventListener("click", onClick);
     window.addEventListener("popstate", onPop);
     window.__bookingReady = true;
-    if (window.__bookingQueued) {
-      window.__bookingQueued = false;
-      openModal();
+    const queued = window.__bookingQueued;
+    if (queued) {
+      window.__bookingQueued = undefined;
+      openModal(null, typeof queued === "string" ? queued : undefined);
     }
     return () => {
       document.removeEventListener("click", onClick);
@@ -317,27 +324,34 @@ export default function BookingApp() {
             {step === 0 && (
               <>
                 <p class="font-display text-3xl leading-tight text-bone">O que vamos fazer hoje?</p>
-                <ul class="mt-6 flex flex-col gap-3">
-                  {bookingServices.map((s) => (
-                    <li>
-                      <button
-                        type="button"
-                        onClick={() => chooseService(s)}
-                        aria-pressed={serviceId === s.id}
-                        class="booking-option flex w-full items-center gap-4 p-4 text-left"
-                      >
-                        <span class="min-w-0 flex-1">
-                          <span class="block text-base font-semibold text-bone">{s.name}</span>
-                          <span class="mt-1 flex items-center gap-1.5 text-sm text-mist">
-                            <Icon name="clock" class="size-4 text-gold-500" />
-                            {formatDuration(s.durationMin)}
-                          </span>
-                        </span>
-                        <span class="font-display text-xl whitespace-nowrap text-gold-300">{formatPrice(s.price)}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
+                {SERVICE_GROUPS.map((group) => (
+                  <div class="mt-7">
+                    <p class="mb-3 text-xs font-medium tracking-wide text-mist uppercase">{group.title}</p>
+                    <ul class="flex flex-col gap-3">
+                      {bookingServices
+                        .filter((s) => s.category === group.category)
+                        .map((s) => (
+                          <li>
+                            <button
+                              type="button"
+                              onClick={() => chooseService(s)}
+                              aria-pressed={serviceId === s.id}
+                              class="booking-option flex w-full items-center gap-4 p-4 text-left"
+                            >
+                              <span class="min-w-0 flex-1">
+                                <span class="block text-base font-semibold text-bone">{s.name}</span>
+                                <span class="mt-1 flex items-center gap-1.5 text-sm text-mist">
+                                  <Icon name="clock" class="size-4 text-gold-500" />
+                                  {formatDuration(s.durationMin)}
+                                </span>
+                              </span>
+                              <span class="font-display text-xl whitespace-nowrap text-gold-300">{formatPrice(s.price)}</span>
+                            </button>
+                          </li>
+                        ))}
+                    </ul>
+                  </div>
+                ))}
               </>
             )}
 

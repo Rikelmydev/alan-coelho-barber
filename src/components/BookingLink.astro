@@ -8,16 +8,17 @@ interface Props {
   variant?: "gold" | "ghost";
   size?: "md" | "lg";
   pulse?: boolean;
+  service?: string; // id do serviço para já abrir com ele escolhido
   class?: string;
 }
-const { variant = "gold", size = "md", pulse = false, class: className = "" } = Astro.props;
+const { variant = "gold", size = "md", pulse = false, service, class: className = "" } = Astro.props;
 const lg = size === "lg";
 ---
 
 {
   pulse ? (
     <span class:list={["btn-pulse", className]}>
-      <a href={whatsappUrl} data-booking-open class:list={["btn-gold w-full", lg && "min-h-14 px-9 text-base"]}>
+      <a href={whatsappUrl} data-booking-open data-booking-service={service} class:list={["btn-gold w-full", lg && "min-h-14 px-9 text-base"]}>
         <Icon name="ph:calendar-check" class={lg ? "size-6" : "size-5"} aria-hidden="true" />
         Agende seu horário
       </a>
@@ -26,6 +27,7 @@ const lg = size === "lg";
     <a
       href={whatsappUrl}
       data-booking-open
+      data-booking-service={service}
       class:list={[variant === "gold" ? "btn-gold" : "btn-ghost", lg && "min-h-14 px-9 text-base", className]}
     >
       <Icon name="ph:calendar-check" class={lg ? "size-6" : "size-5"} aria-hidden="true" />

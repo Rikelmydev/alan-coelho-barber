@@ -48,7 +48,7 @@ const jsonLd = {
           var t = e.target.closest && e.target.closest("[data-booking-open]");
           if (t && !window.__bookingReady) {
             e.preventDefault();
-            window.__bookingQueued = true;
+            window.__bookingQueued = t.getAttribute("data-booking-service") || true;
             // Se o fluxo não carregar (sem internet boa, erro), segue para o WhatsApp
             setTimeout(function () {
               if (!window.__bookingReady) location.href = t.href;

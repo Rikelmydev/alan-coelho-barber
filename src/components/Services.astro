@@ -1,7 +1,8 @@
 ---
 import { Picture } from "astro:assets";
 import { Icon } from "astro-icon/components";
-import { featuredService, services } from "../data/content";
+import { featuredService, serviceGroups } from "../data/content";
+import { whatsappUrl } from "../data/site";
 import BookingLink from "./BookingLink.astro";
 ---
 
@@ -10,68 +11,83 @@ import BookingLink from "./BookingLink.astro";
     <header class="max-w-2xl" data-reveal>
       <h2 class="font-display text-4xl leading-tight font-medium text-bone sm:text-5xl">Serviços</h2>
       <p class="mt-4 text-base leading-relaxed text-mist sm:text-lg">
-        Escolha o atendimento e reserve seu horário online, sem precisar chamar ninguém.
+        Toque no serviço para agendar direto, com horário confirmado na hora.
       </p>
     </header>
 
-    <!--
-      Bento: destaque 2x2 + 4 serviços.
-      Mobile: 1 coluna. Tablet: destaque na largura toda + grade 2x2. Desktop: 4 colunas.
-    -->
-    <ul class="mt-14 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:grid-rows-2">
-      <li class="sm:col-span-2 lg:row-span-2" data-reveal>
-        <article
-          class="service-card group relative flex h-full min-h-[26rem] flex-col justify-end overflow-hidden border border-gold-500/30 p-7 sm:p-9"
-        >
-          <Picture
-            src={featuredService.image}
-            alt={featuredService.imageAlt}
-            inferSize
-            widths={[480, 800, 1200]}
-            sizes="(min-width: 1024px) 50vw, 100vw"
-            formats={["webp"]}
-            fallbackFormat="jpg"
-            quality={72}
-            class="absolute inset-0 -z-10 size-full object-cover grayscale-[40%] transition-transform duration-[1.2s] ease-(--ease-luxe) group-hover:scale-105"
-          />
-          <div class="absolute inset-0 -z-10 bg-linear-to-t from-ink-950 via-ink-950/70 to-ink-950/10"></div>
+    <!-- Destaque com foto + tabela de preços. Mobile: um embaixo do outro. -->
+    <div class="mt-14 grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-14">
+      <article
+        class="service-card group relative flex min-h-[24rem] flex-col justify-end overflow-hidden border border-gold-500/30 p-7 sm:min-h-[28rem] sm:p-9 lg:col-span-5 lg:min-h-full"
+        data-reveal
+      >
+        <Picture
+          src={featuredService.image}
+          alt={featuredService.imageAlt}
+          inferSize
+          widths={[480, 800, 1200]}
+          sizes="(min-width: 1024px) 40vw, 100vw"
+          formats={["webp"]}
+          fallbackFormat="jpg"
+          quality={72}
+          class="absolute inset-0 -z-10 size-full object-cover grayscale-[40%] transition-transform duration-[1.2s] ease-(--ease-luxe) group-hover:scale-105"
+        />
+        <div class="absolute inset-0 -z-10 bg-linear-to-t from-ink-950 via-ink-950/70 to-ink-950/10"></div>
 
-          <span class="mb-auto self-start border border-gold-400/60 bg-ink-950/60 px-3 py-1.5 text-xs font-semibold tracking-[0.14em] text-gold-300 uppercase backdrop-blur-sm">
-            Mais pedido
-          </span>
+        <span class="mb-auto self-start border border-gold-400/60 bg-ink-950/60 px-3 py-1.5 text-xs font-semibold tracking-[0.14em] text-gold-300 uppercase backdrop-blur-sm">
+          Combo
+        </span>
 
-          <h3 class="mt-10 font-display text-3xl font-medium text-bone sm:text-4xl">{featuredService.name}</h3>
-          <p class="mt-3 max-w-md text-sm leading-relaxed text-bone/80 sm:text-base">{featuredService.description}</p>
-          <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
-            <p class="flex items-baseline gap-4">
-              <span class="font-display text-3xl text-gold-300">{featuredService.price}</span>
-              <span class="flex items-center gap-1.5 text-sm text-mist">
-                <Icon name="ph:clock-light" class="size-4" aria-hidden="true" />{featuredService.duration}
-              </span>
-            </p>
-            <BookingLink />
-          </div>
-        </article>
-      </li>
+        <h3 class="mt-10 font-display text-3xl font-medium text-bone sm:text-4xl">{featuredService.name}</h3>
+        <p class="mt-3 max-w-md text-sm leading-relaxed text-bone/80 sm:text-base">{featuredService.description}</p>
+        <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
+          <p class="flex items-baseline gap-4">
+            <span class="font-display text-3xl text-gold-300">{featuredService.price}</span>
+            <span class="flex items-center gap-1.5 text-sm text-mist">
+              <Icon name="ph:clock-light" class="size-4" aria-hidden="true" />{featuredService.duration}
+            </span>
+          </p>
+          <BookingLink service={featuredService.id} />
+        </div>
+      </article>
 
-      {
-        services.map((s, i) => (
-          <li data-reveal style={`--d:${(i % 2) * 90 + 60}ms`}>
-            <article class="service-card group flex h-full flex-col border border-ink-700 bg-ink-850 p-7">
-              <div class="flex items-start justify-between gap-4">
-                <h3 class="font-display text-2xl font-medium text-bone">{s.name}</h3>
-                <span class="font-display text-xl whitespace-nowrap text-gold-300">{s.price}</span>
-              </div>
-              <p class="mt-3 text-sm leading-relaxed text-mist">{s.description}</p>
-              <p class="mt-auto flex items-center gap-1.5 pt-6 text-sm text-mist">
-                <Icon name="ph:clock-light" class="size-4 text-gold-500" aria-hidden="true" />
-                {s.duration}
-              </p>
-            </article>
-          </li>
-        ))
-      }
-    </ul>
+      <div class="flex flex-col gap-12 lg:col-span-7">
+        {
+          serviceGroups.map((group, g) => (
+            <div data-reveal style={`--d:${g * 120 + 80}ms`}>
+              <h3 class="font-display text-2xl text-gold-300">{group.title}</h3>
+              <ul class="mt-4 grid grid-cols-1 gap-x-10 sm:grid-cols-2">
+                {group.items.map((s) => (
+                  <li>
+                    <a
+                      href={whatsappUrl}
+                      data-booking-open
+                      data-booking-service={s.id}
+                      class="menu-row group flex min-h-16 items-center gap-3 py-3"
+                      aria-label={`Agendar ${s.name}, ${s.price}, ${s.duration}`}
+                    >
+                      <span class="flex min-w-0 flex-col">
+                        <span class="text-base font-medium text-bone transition-colors duration-300 group-hover:text-gold-200">
+                          {s.name}
+                        </span>
+                        <span class="mt-0.5 text-sm text-mist">{s.duration}</span>
+                      </span>
+                      <span aria-hidden="true" class="mb-1.5 flex-1 self-end border-b border-dotted border-ink-600" />
+                      <span class="font-display text-xl whitespace-nowrap text-gold-300">{s.price}</span>
+                      <Icon
+                        name="ph:arrow-right-light"
+                        class="hidden size-5 shrink-0 -translate-x-1 text-gold-400 opacity-0 transition duration-300 group-hover:translate-x-0 group-hover:opacity-100 lg:block"
+                        aria-hidden="true"
+                      />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </div>
   </div>
 </section>
 

@@ -1,77 +1,56 @@
 // Configuração do agendamento: serviços, profissionais e horário de funcionamento.
 // É a fonte única desses dados; a seção "Serviços" da página também lê daqui.
-// Preços e durações são EXEMPLOS: ajuste para os valores reais.
 
 export type BookingService = {
   id: string;
   name: string;
-  description: string;
   durationMin: number;
   price: number; // em reais
+  category: "combo" | "avulso";
 };
 
 export type Professional = {
   id: string;
   name: string;
   role: string;
-  photo?: string; // URL ou caminho em /public. Sem foto, mostra as iniciais.
+  photo?: string; // caminho em /public (ex.: "/equipe/alan.jpg"). Sem foto, mostra as iniciais.
   serviceIds?: string[]; // se vazio, atende todos os serviços
 };
 
+// A ordem aqui é a ordem em que aparecem no agendamento.
 export const bookingServices: BookingService[] = [
-  {
-    id: "corte-barba",
-    name: "Corte + Barba",
-    description: "Corte na tesoura ou máquina, barba com toalha quente e acabamento na navalha.",
-    durationMin: 75,
-    price: 80,
-  },
-  {
-    id: "corte",
-    name: "Corte",
-    description: "Tesoura ou máquina, do clássico ao degradê, com lavagem e finalização.",
-    durationMin: 45,
-    price: 50,
-  },
-  {
-    id: "barba",
-    name: "Barba",
-    description: "Toalha quente, desenho na navalha e hidratação dos fios.",
-    durationMin: 30,
-    price: 40,
-  },
-  {
-    id: "sobrancelha",
-    name: "Sobrancelha",
-    description: "Alinhamento discreto na navalha, mantendo o formato natural.",
-    durationMin: 15,
-    price: 20,
-  },
-  {
-    id: "pigmentacao",
-    name: "Pigmentação",
-    description: "Preenchimento de falhas na barba ou no cabelo para um visual uniforme.",
-    durationMin: 30,
-    price: 35,
-  },
+  { id: "corte", name: "Corte", durationMin: 30, price: 40, category: "combo" },
+  { id: "corte-sobrancelha", name: "Corte e sobrancelha", durationMin: 35, price: 50, category: "combo" },
+  { id: "corte-barba", name: "Corte e barba", durationMin: 60, price: 65, category: "combo" },
+  { id: "corte-hidratacao", name: "Corte e hidratação", durationMin: 50, price: 50, category: "combo" },
+  { id: "corte-penteado", name: "Corte e penteado", durationMin: 45, price: 60, category: "combo" },
+  { id: "corte-relaxamento", name: "Corte e relaxamento", durationMin: 60, price: 65, category: "combo" },
+  { id: "corte-progressiva", name: "Corte e progressiva", durationMin: 60, price: 100, category: "combo" },
+  { id: "corte-botox", name: "Corte e botox", durationMin: 60, price: 100, category: "combo" },
+  { id: "corte-luzes", name: "Corte e luzes", durationMin: 120, price: 130, category: "combo" },
+  { id: "barba", name: "Barba", durationMin: 30, price: 30, category: "avulso" },
+  { id: "penteado", name: "Penteado", durationMin: 20, price: 20, category: "avulso" },
 ];
 
-// TODO: adicione os outros barbeiros da equipe, se houver.
+// Serviço em destaque (card com foto) na seção "Serviços" da página.
+export const featuredServiceId = "corte-barba";
+
 export const professionals: Professional[] = [
-  { id: "alan", name: "Alan Coelho", role: "Barbeiro e fundador" },
+  { id: "alan", name: "Alan Coelho", role: "Barbeiro" },
+  { id: "gabriel", name: "Gabriel Almeida", role: "Barbeiro" },
 ];
 
 // Horário de funcionamento por dia da semana (0 = domingo ... 6 = sábado).
-// Cada dia pode ter mais de um período, ex.: [["09:00", "12:00"], ["13:00", "20:00"]] para pausa de almoço.
-// TODO: ajuste para o horário real.
+// Cada dia pode ter mais de um período, ex.: [["09:00", "12:00"], ["12:30", "20:00"]] para pausa de almoço.
+// Terça a sábado, 09:00 às 20:00 (último horário de 30 min às 19:30).
 export const weeklyHours: Record<number, [string, string][]> = {
   0: [],
   1: [],
-  2: [["09:00", "12:00"], ["13:00", "20:00"]],
-  3: [["09:00", "12:00"], ["13:00", "20:00"]],
-  4: [["09:00", "12:00"], ["13:00", "20:00"]],
-  5: [["09:00", "12:00"], ["13:00", "20:00"]],
-  6: [["08:00", "18:00"]],
+  2: [["09:00", "20:00"]],
+  3: [["09:00", "20:00"]],
+  4: [["09:00", "20:00"]],
+  5: [["09:00", "20:00"]],
+  6: [["09:00", "20:00"]],
 };
 
 export const bookingRules = {

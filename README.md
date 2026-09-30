@@ -35,13 +35,14 @@ A seção "Serviços" e o horário na seção de contato leem de `booking.ts`, e
 
 O agendamento precisa de um banco de dados online. O recomendado é o **Turso** (tem plano gratuito).
 
-1. Suba o projeto para o GitHub e importe na [Vercel](https://vercel.com/new).
-2. Na Vercel, em **Storage**, adicione o **Turso** pelo Marketplace. Ele cria sozinho as variáveis `TURSO_DATABASE_URL` e `TURSO_AUTH_TOKEN`.
-   (Ou crie o banco em [turso.tech](https://turso.tech) e cadastre as duas variáveis manualmente.)
-3. Em **Settings > Environment Variables**, cadastre:
-   - `ADMIN_PASSWORD`: a senha do painel `/admin`
-   - `ADMIN_SECRET`: um texto aleatório longo (serve para assinar o login)
-4. Faça o deploy. As tabelas do banco são criadas sozinhas no primeiro agendamento.
+Tudo abaixo usa só planos gratuitos (Vercel Hobby e Turso Free).
+
+1. **Ligar ao GitHub**: no projeto da Vercel, **Settings > Git > Connect Git Repository** e escolha este repositório. A partir daí, cada `git push` publica o site sozinho.
+2. **Banco de dados**: no projeto, aba **Storage > Create Database > Turso**, plano **Free**, e conecte ao projeto. Ele cria sozinho as variáveis `TURSO_DATABASE_URL` e `TURSO_AUTH_TOKEN`.
+3. **Senha do painel**: em **Settings > Environment Variables**, adicione `ADMIN_PASSWORD` com a senha que você quiser.
+4. Faça um novo deploy (ou um `git push`). As tabelas do banco são criadas sozinhas no primeiro agendamento.
+
+Os itens que a Vercel sugere depois (domínio próprio, Web Analytics, Speed Insights) são opcionais.
 
 Veja `.env.example` para a lista de variáveis.
 

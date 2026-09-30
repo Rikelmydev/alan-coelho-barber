@@ -1,0 +1,75 @@
+---
+import { Picture } from "astro:assets";
+import { gallery } from "../data/content";
+
+/*
+  Desktop (lg): grade assimétrica de 4 colunas x 3 linhas, sem buracos:
+    [1 1 2 3]
+    [1 1 2 4]
+    [5 6 6 6]
+  Mobile e tablet: carrossel horizontal com scroll-snap (arrastar com o dedo).
+*/
+const layout = [
+  "lg:col-span-2 lg:row-span-2",
+  "lg:row-span-2",
+  "",
+  "",
+  "",
+  "lg:col-span-3",
+];
+const sizes = [
+  "(min-width: 1024px) 50vw, 80vw",
+  "(min-width: 1024px) 25vw, 80vw",
+  "(min-width: 1024px) 25vw, 80vw",
+  "(min-width: 1024px) 25vw, 80vw",
+  "(min-width: 1024px) 25vw, 80vw",
+  "(min-width: 1024px) 75vw, 80vw",
+];
+---
+
+<section id="galeria" class="py-24 sm:py-32">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <header class="max-w-2xl" data-reveal>
+      <h2 class="font-display text-4xl leading-tight font-medium text-bone sm:text-5xl">Trabalhos recentes</h2>
+      <p class="mt-4 text-base leading-relaxed text-mist sm:text-lg">
+        Cortes clássicos, degradês e barbas desenhadas na navalha.
+      </p>
+    </header>
+  </div>
+
+  <div class="mx-auto mt-14 max-w-7xl lg:px-8">
+    <ul
+      class="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-2 sm:scroll-px-6 sm:px-6 lg:grid lg:auto-rows-[15rem] lg:grid-cols-4 lg:gap-4 lg:overflow-visible lg:px-0 xl:auto-rows-[17rem]"
+      aria-label="Galeria de cortes"
+    >
+      {
+        gallery.map((img, i) => (
+          <li
+            class:list={[
+              "gallery-item group relative aspect-[4/5] w-[78vw] max-w-sm shrink-0 snap-start overflow-hidden bg-ink-850 sm:w-[46vw] lg:aspect-auto lg:w-auto lg:max-w-none",
+              layout[i],
+            ]}
+            data-reveal
+            style={`--d:${(i % 3) * 90}ms`}
+          >
+            <Picture
+              src={img.src}
+              alt={img.alt}
+              inferSize
+              widths={[400, 700, 1000, 1400]}
+              sizes={sizes[i]}
+              formats={["webp"]}
+              fallbackFormat="jpg"
+              quality={72}
+              class="size-full object-cover grayscale-[45%] transition-[transform,filter] duration-[1.1s] ease-(--ease-luxe) group-hover:scale-105 group-hover:grayscale-0"
+            />
+            <span
+              aria-hidden="true"
+              class="pointer-events-none absolute inset-3 border border-gold-300/0 transition-colors duration-700 group-hover:border-gold-300/60"
+            />
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>

@@ -1,0 +1,109 @@
+---
+import { Icon } from "astro-icon/components";
+import BookingLink from "./BookingLink.astro";
+import { site, whatsappUrl, mapEmbedUrl, mapDirectionsUrl } from "../data/site";
+import { hoursSummary } from "../data/booking";
+
+const { address } = site;
+---
+
+<section id="contato" class="bg-ink-900 py-24 sm:py-32">
+  <div class="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:gap-16 lg:px-8">
+    <!-- Informações -->
+    <div class="lg:col-span-5" data-reveal>
+      <h2 class="font-display text-4xl leading-tight font-medium text-bone sm:text-5xl">Onde estamos</h2>
+
+      <address class="mt-10 flex gap-4 not-italic">
+        <Icon name="ph:map-pin-light" class="mt-0.5 size-6 shrink-0 text-gold-400" aria-hidden="true" />
+        <div class="text-base leading-relaxed">
+          <p class="text-bone">{address.street}</p>
+          <p class="text-mist">{address.district}, {address.city} - {address.state}</p>
+          <p class="text-mist">CEP {address.postalCode}</p>
+          <a
+            href={mapDirectionsUrl}
+            target="_blank"
+            rel="noopener"
+            class="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-gold-300 underline-offset-4 hover:underline"
+          >
+            Como chegar <Icon name="ph:arrow-up-right" class="size-4" aria-hidden="true" />
+          </a>
+        </div>
+      </address>
+
+      <div class="mt-8 flex gap-4">
+        <Icon name="ph:clock-light" class="mt-0.5 size-6 shrink-0 text-gold-400" aria-hidden="true" />
+        <dl class="w-full max-w-sm text-base">
+          {
+            hoursSummary().map((h) => (
+              <div class="flex justify-between gap-6 py-1.5">
+                <dt class="text-mist">{h.days}</dt>
+                <dd class:list={[h.time === "Fechado" ? "text-mist/70" : "text-bone"]}>{h.time}</dd>
+              </div>
+            ))
+          }
+        </dl>
+      </div>
+
+      <div class="rule-gold mt-10 max-w-sm"></div>
+
+      <ul class="mt-8 flex flex-wrap gap-3">
+        <li>
+          <a href={site.instagramUrl} target="_blank" rel="noopener" class="social-link">
+            <Icon name="ph:instagram-logo-light" class="size-5" aria-hidden="true" />
+            Instagram
+          </a>
+        </li>
+        <li>
+          <a href={whatsappUrl} target="_blank" rel="noopener" class="social-link">
+            <Icon name="ph:whatsapp-logo-light" class="size-5" aria-hidden="true" />
+            {site.whatsappDisplay}
+          </a>
+        </li>
+      </ul>
+
+      <BookingLink class="mt-10 w-full sm:w-auto" />
+    </div>
+
+    <!-- Mapa (carrega só quando chega perto da tela) -->
+    <div class="lg:col-span-7" data-reveal style="--d:120ms">
+      <div class="relative aspect-[4/3] overflow-hidden border border-ink-700 bg-ink-850 lg:aspect-auto lg:h-full lg:min-h-[28rem]">
+        <iframe
+          title={`Mapa: ${site.name}`}
+          src={mapEmbedUrl}
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          class="map-dark absolute inset-0 size-full border-0"
+        ></iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .social-link {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--color-ink-600);
+    padding-inline: 1.1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-bone);
+    transition:
+      border-color 0.3s var(--ease-luxe),
+      color 0.3s var(--ease-luxe),
+      transform 0.2s var(--ease-luxe);
+  }
+  .social-link:hover {
+    border-color: var(--color-gold-400);
+    color: var(--color-gold-300);
+  }
+  .social-link:active {
+    transform: scale(0.98);
+  }
+  /* Deixa o mapa do Google no mesmo clima escuro da página */
+  .map-dark {
+    filter: grayscale(1) invert(0.92) contrast(0.85) brightness(0.95);
+  }
+</style>

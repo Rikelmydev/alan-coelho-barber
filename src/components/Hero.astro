@@ -1,0 +1,64 @@
+---
+import { Picture } from "astro:assets";
+import Logo from "./Logo.astro";
+import BookingLink from "./BookingLink.astro";
+import { hero } from "../data/content";
+---
+
+<section id="inicio" class="relative isolate flex min-h-[100dvh] items-end overflow-hidden lg:items-center">
+  <!-- Foto: fundo inteiro no mobile, coluna à direita no desktop -->
+  <div
+    class="absolute inset-0 -z-10 lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[46%]"
+  >
+    <Picture
+      src={hero.image}
+      alt={hero.imageAlt}
+      inferSize
+      widths={[480, 768, 1024, 1400]}
+      sizes="(min-width: 1024px) 46vw, 100vw"
+      formats={["webp"]}
+      fallbackFormat="jpg"
+      quality={72}
+      loading="eager"
+      fetchpriority="high"
+      class="hero-img-in size-full object-cover object-[60%_30%] grayscale-[35%]"
+    />
+    <!-- Escurece a foto para o texto ficar legível -->
+    <div
+      class="absolute inset-0 bg-linear-to-t from-ink-950 via-ink-950/75 to-ink-950/30 lg:bg-linear-to-r lg:from-ink-950 lg:via-ink-950/20 lg:to-transparent"
+    >
+    </div>
+  </div>
+
+  <!-- Moldura dourada deslocada (desktop) -->
+  <div
+    aria-hidden="true"
+    class="hero-in pointer-events-none absolute top-[18%] right-[3%] bottom-[10%] -z-10 hidden w-[40%] border border-gold-500/40 lg:block"
+    style="--d:500ms"
+  >
+  </div>
+
+  <div class="mx-auto w-full max-w-7xl px-4 pt-28 pb-14 sm:px-6 lg:px-8 lg:py-24">
+    <div class="max-w-xl lg:max-w-2xl">
+      <div class="hero-in" style="--d:100ms">
+        <Logo size="lg" />
+      </div>
+
+      <h1
+        class="hero-in mt-8 font-display text-5xl leading-[1.05] font-medium tracking-tight text-bone sm:text-6xl lg:text-7xl"
+        style="--d:220ms"
+      >
+        Precisão em cada <em class="text-gold-metal pr-1 font-normal">detalhe.</em>
+      </h1>
+
+      <p class="hero-in mt-6 max-w-md text-base leading-relaxed text-mist sm:text-lg" style="--d:360ms">
+        Cortes e barbas feitos com técnica e sem pressa, num espaço pensado para você relaxar.
+      </p>
+
+      <div class="hero-in mt-10 flex flex-col gap-3 sm:flex-row sm:gap-4" style="--d:480ms">
+        <BookingLink size="lg" pulse />
+        <a href="#servicos" class="btn-ghost">Ver serviços</a>
+      </div>
+    </div>
+  </div>
+</section>

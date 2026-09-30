@@ -1,0 +1,131 @@
+---
+import { Icon } from "astro-icon/components";
+import Logo from "./Logo.astro";
+import BookingLink from "./BookingLink.astro";
+
+const links = [
+  { href: "#servicos", label: "Serviços" },
+  { href: "#galeria", label: "Galeria" },
+  { href: "#contato", label: "Contato" },
+];
+---
+
+<header
+  id="site-header"
+  class="group/header fixed inset-x-0 top-0 z-40 border-b border-transparent transition-[background-color,border-color,backdrop-filter] duration-500 data-[solid=true]:border-ink-700/70 data-[solid=true]:bg-ink-950/85 data-[solid=true]:backdrop-blur-md"
+>
+  <div class="mx-auto flex h-(--header-h) max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+    <!-- O hero já mostra o logo grande; este aparece quando a página rola -->
+    <a
+      href="#inicio"
+      class="invisible relative z-50 opacity-0 transition-[opacity,visibility] duration-500 group-data-[solid=true]/header:visible group-data-[solid=true]/header:opacity-100"
+      aria-label="Alan Coelho Barber, voltar ao início"
+    >
+      <Logo />
+    </a>
+
+    <nav aria-label="Principal" class="hidden items-center gap-10 md:flex">
+      <ul class="flex items-center gap-8">
+        {
+          links.map((l) => (
+            <li>
+              <a
+                href={l.href}
+                class="relative py-2 text-sm font-medium tracking-wide text-mist transition-colors duration-300 after:absolute after:inset-x-0 after:-bottom-0.5 after:h-px after:origin-left after:scale-x-0 after:bg-gold-400 after:transition-transform after:duration-500 after:ease-(--ease-luxe) hover:text-bone hover:after:scale-x-100"
+              >
+                {l.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <BookingLink class="min-h-11 px-5 text-xs" />
+    </nav>
+
+    <!-- Botão hambúrguer (mobile) -->
+    <button
+      id="menu-toggle"
+      type="button"
+      class="group relative z-50 grid size-12 place-items-center md:hidden"
+      aria-controls="mobile-menu"
+      aria-expanded="false"
+      aria-label="Abrir menu"
+    >
+      <span class="relative block h-3.5 w-7" aria-hidden="true">
+        <span
+          class="absolute inset-x-0 top-0 h-px bg-gold-300 transition-transform duration-500 ease-(--ease-luxe) group-aria-expanded:translate-y-[7px] group-aria-expanded:rotate-45"
+        ></span>
+        <span
+          class="absolute top-1/2 right-0 h-px w-4 bg-gold-300 transition-[opacity,transform] duration-300 group-aria-expanded:translate-x-2 group-aria-expanded:opacity-0"
+        ></span>
+        <span
+          class="absolute inset-x-0 bottom-0 h-px bg-gold-300 transition-transform duration-500 ease-(--ease-luxe) group-aria-expanded:-translate-y-[6px] group-aria-expanded:-rotate-45"
+        ></span>
+      </span>
+    </button>
+  </div>
+</header>
+
+<!--
+  Menu mobile em tela cheia. Fica fora do <header> porque o backdrop-filter do header
+  faria o position: fixed ficar preso à altura dele.
+-->
+<div
+    id="mobile-menu"
+    class="invisible fixed inset-0 z-[35] flex flex-col bg-ink-950/97 px-6 pt-[calc(var(--header-h)+2.5rem)] pb-10 opacity-0 backdrop-blur-lg data-[open=true]:visible data-[open=true]:opacity-100 md:hidden"
+    data-open="false"
+  >
+    <nav aria-label="Menu mobile" class="flex flex-1 flex-col">
+      <ul class="flex flex-col">
+        {
+          links.map((l, i) => (
+            <li
+              class="menu-item translate-y-6 border-b border-ink-700 opacity-0 transition-[opacity,transform] duration-700 ease-(--ease-luxe)"
+              style={`--i:${i}`}
+            >
+              <a href={l.href} class="flex min-h-16 items-center justify-between font-display text-3xl text-bone">
+                {l.label}
+                <Icon name="ph:arrow-right-light" class="size-6 text-gold-500" aria-hidden="true" />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+      <div
+        class="menu-item mt-auto translate-y-6 opacity-0 transition-[opacity,transform] duration-700 ease-(--ease-luxe)"
+        style={`--i:${links.length}`}
+      >
+        <BookingLink class="w-full" />
+      </div>
+    </nav>
+</div>
+
+<style>
+  /* Abrindo: fica visível na hora (para receber foco) e faz fade.
+     Fechando: faz fade e só então some. */
+  #mobile-menu {
+    transition:
+      opacity 0.5s var(--ease-luxe),
+      visibility 0s linear 0.5s;
+  }
+  #mobile-menu[data-open="true"] {
+    transition:
+      opacity 0.5s var(--ease-luxe),
+      visibility 0s;
+  }
+  #mobile-menu .menu-item {
+    transition-delay: 0ms;
+  }
+  #mobile-menu[data-open="true"] .menu-item {
+    opacity: 1;
+    transform: none;
+    transition-delay: calc(120ms + var(--i) * 70ms);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #mobile-menu,
+    #mobile-menu .menu-item {
+      transition-duration: 0ms !important;
+      transition-delay: 0ms !important;
+    }
+  }
+</style>

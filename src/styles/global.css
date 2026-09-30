@@ -1,0 +1,405 @@
+@import "tailwindcss";
+@import "@fontsource-variable/playfair-display";
+@import "@fontsource-variable/playfair-display/wght-italic.css";
+@import "@fontsource-variable/montserrat";
+
+@theme {
+  --font-display: "Playfair Display Variable", Georgia, "Times New Roman", serif;
+  --font-sans: "Montserrat Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Preto e grafite */
+  --color-ink-950: #09090a;
+  --color-ink-900: #0f0f11;
+  --color-ink-850: #141417;
+  --color-ink-800: #1a1a1e;
+  --color-ink-700: #26262b;
+  --color-ink-600: #3b3b42;
+
+  /* Texto */
+  --color-bone: #ece8e1;
+  --color-mist: #a6a29b;
+
+  /* Ouro metálico */
+  --color-gold-200: #f4e6c0;
+  --color-gold-300: #ead39a;
+  --color-gold-400: #d8b872;
+  --color-gold-500: #c29b4e;
+  --color-gold-600: #9c7836;
+  --color-gold-700: #6b5226;
+
+  --ease-luxe: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --gold-metal: linear-gradient(
+      115deg,
+      #7d5e27 0%,
+      #c29b4e 24%,
+      #f4e6c0 46%,
+      #d8b872 60%,
+      #8f6b2c 100%
+    );
+    --header-h: 4.5rem;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--header-h);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-ink-950 font-sans text-bone antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    @apply bg-gold-400 text-ink-950;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold-400);
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+@layer components {
+  /* Texto com brilho de ouro metálico */
+  .text-gold-metal {
+    background: var(--gold-metal);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Botão principal: ouro metálico com reflexo que atravessa no hover */
+  .btn-gold {
+    @apply relative inline-flex min-h-12 items-center justify-center gap-2 overflow-hidden px-7 text-sm font-semibold tracking-[0.08em] whitespace-nowrap text-ink-950 uppercase;
+    background: var(--gold-metal);
+    background-size: 160% 100%;
+    background-position: 0% 50%;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.35),
+      0 10px 30px -12px rgb(194 155 78 / 0.55);
+    transition:
+      background-position 0.6s var(--ease-luxe),
+      box-shadow 0.4s var(--ease-luxe),
+      transform 0.2s var(--ease-luxe);
+  }
+  .btn-gold::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.45) 50%, transparent 70%);
+    transform: translateX(-120%);
+    transition: transform 0.8s var(--ease-luxe);
+    pointer-events: none;
+  }
+  .btn-gold:hover {
+    background-position: 100% 50%;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.35),
+      0 14px 40px -10px rgb(216 184 114 / 0.7);
+  }
+  .btn-gold:hover::after {
+    transform: translateX(120%);
+  }
+  .btn-gold:active {
+    transform: scale(0.98);
+  }
+
+  /* Botão secundário: contorno dourado */
+  .btn-ghost {
+    @apply inline-flex min-h-12 items-center justify-center gap-2 border border-gold-500/60 px-7 text-sm font-semibold tracking-[0.08em] whitespace-nowrap text-gold-300 uppercase;
+    transition:
+      border-color 0.3s var(--ease-luxe),
+      background-color 0.3s var(--ease-luxe),
+      color 0.3s var(--ease-luxe),
+      transform 0.2s var(--ease-luxe);
+  }
+  .btn-ghost:hover {
+    @apply border-gold-300 bg-gold-400/10 text-gold-200;
+  }
+  .btn-ghost:active {
+    transform: scale(0.98);
+  }
+
+  /* Linha dourada fina usada como divisor */
+  .rule-gold {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-gold-500), transparent);
+  }
+}
+
+/* ---------- Animações ---------- */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Entrada do hero ao carregar a página */
+  .hero-in {
+    opacity: 0;
+    transform: translateY(24px);
+    animation: hero-in 1s var(--ease-luxe) forwards;
+    animation-delay: var(--d, 0ms);
+  }
+  .hero-img-in {
+    opacity: 0;
+    transform: scale(1.06);
+    animation: hero-img-in 1.6s var(--ease-luxe) forwards;
+  }
+
+  /* Scroll reveal: só esconde os elementos quando o JS está ativo */
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(32px);
+    transition:
+      opacity 0.9s var(--ease-luxe),
+      transform 0.9s var(--ease-luxe);
+    transition-delay: var(--d, 0ms);
+  }
+  .js [data-reveal].is-in {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hero-in {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hero-img-in {
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ---------- Botão de agendamento com pulso (hero) ---------- */
+
+/* Envolve o .btn-gold; o anel fica fora do botão porque ele usa overflow: hidden para o reflexo */
+.btn-pulse {
+  position: relative;
+  display: inline-flex;
+}
+.btn-pulse::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--color-gold-300);
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .btn-pulse::before {
+    animation: gold-pulse 2.4s var(--ease-luxe) infinite;
+    animation-delay: 1.4s;
+  }
+}
+@keyframes gold-pulse {
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  70%,
+  100% {
+    opacity: 0;
+    transform: scale(1.12, 1.35);
+  }
+}
+
+/* ---------- Modal de agendamento ---------- */
+
+.booking-backdrop {
+  opacity: 0;
+  transition: opacity 0.45s var(--ease-luxe);
+}
+.booking-panel {
+  transform: translateY(100%);
+  transition: transform 0.45s var(--ease-luxe);
+}
+@media (min-width: 768px) {
+  .booking-panel {
+    transform: translateX(100%);
+  }
+}
+.booking-root[data-open="true"] .booking-backdrop {
+  opacity: 1;
+}
+.booking-root[data-open="true"] .booking-panel {
+  transform: none;
+}
+
+.booking-progress {
+  background: var(--gold-metal);
+  transform-origin: left;
+  transition: transform 0.5s var(--ease-luxe);
+}
+
+/* Cards de opção (serviço, profissional) */
+.booking-option {
+  border: 1px solid var(--color-ink-700);
+  background: var(--color-ink-800);
+  transition:
+    border-color 0.25s var(--ease-luxe),
+    background-color 0.25s var(--ease-luxe),
+    transform 0.15s var(--ease-luxe);
+}
+.booking-option:hover {
+  border-color: rgb(216 184 114 / 0.5);
+}
+.booking-option:active {
+  transform: scale(0.985);
+}
+.booking-option[aria-pressed="true"] {
+  border-color: var(--color-gold-400);
+  background: rgb(216 184 114 / 0.08);
+  box-shadow: 0 0 0 1px var(--color-gold-400) inset;
+}
+
+/* Campos do formulário */
+.booking-input {
+  min-height: 3.25rem;
+  width: 100%;
+  border: 1px solid var(--color-ink-600);
+  background: var(--color-ink-800);
+  padding-inline: 1rem;
+  font-size: 1rem; /* 16px evita o zoom automático do iPhone */
+  color: var(--color-bone);
+  transition:
+    border-color 0.25s var(--ease-luxe),
+    box-shadow 0.25s var(--ease-luxe);
+}
+.booking-input::placeholder {
+  color: #8a867f;
+}
+.booking-input:focus {
+  outline: none;
+  border-color: var(--color-gold-400);
+  box-shadow:
+    0 0 0 3px rgb(216 184 114 / 0.18),
+    0 0 18px -4px rgb(216 184 114 / 0.45);
+}
+.booking-input[aria-invalid="true"] {
+  border-color: rgb(252 165 165 / 0.7);
+}
+
+/* Calendário */
+.booking-day {
+  color: var(--color-bone);
+  transition:
+    background-color 0.2s var(--ease-luxe),
+    color 0.2s var(--ease-luxe);
+}
+.booking-day:not(:disabled):not([aria-pressed="true"]):hover {
+  background: var(--color-ink-800);
+}
+.booking-day:disabled {
+  color: rgb(166 162 155 / 0.35);
+  cursor: default;
+}
+.booking-day[aria-pressed="true"] {
+  background: var(--gold-metal);
+  color: var(--color-ink-950);
+  font-weight: 700;
+}
+
+/* Horários */
+.booking-time {
+  border: 1px solid var(--color-ink-600);
+  background: var(--color-ink-800);
+  color: var(--color-bone);
+  transition:
+    border-color 0.2s var(--ease-luxe),
+    transform 0.15s var(--ease-luxe);
+}
+.booking-time:hover {
+  border-color: var(--color-gold-400);
+}
+.booking-time:active {
+  transform: scale(0.96);
+}
+.booking-time[aria-pressed="true"] {
+  border-color: transparent;
+  background: var(--gold-metal);
+  color: var(--color-ink-950);
+}
+
+.booking-skeleton {
+  background: linear-gradient(100deg, var(--color-ink-800) 30%, var(--color-ink-700) 50%, var(--color-ink-800) 70%);
+  background-size: 300% 100%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .booking-step-fwd {
+    animation: step-in-left 0.45s var(--ease-luxe) both;
+  }
+  .booking-step-back {
+    animation: step-in-right 0.45s var(--ease-luxe) both;
+  }
+  .booking-step-up {
+    animation: step-in-up 0.45s var(--ease-luxe) both;
+  }
+  .booking-skeleton {
+    animation: shimmer 1.4s linear infinite;
+  }
+  .booking-check {
+    animation: check-pop 0.6s var(--ease-luxe) both;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .booking-backdrop,
+  .booking-panel,
+  .booking-progress {
+    transition: none;
+  }
+}
+
+@keyframes step-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(36px);
+  }
+}
+@keyframes step-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(-36px);
+  }
+}
+@keyframes step-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+@keyframes check-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+
+/* Carrossel horizontal no mobile sem barra de rolagem visível */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

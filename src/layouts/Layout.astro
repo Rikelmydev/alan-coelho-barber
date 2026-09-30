@@ -1,0 +1,66 @@
+---
+import "../styles/global.css";
+import { site } from "../data/site";
+
+const title = `${site.name} | Barbearia premium`;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "HairSalon",
+  name: site.name,
+  description: site.description,
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: site.address.street,
+    addressLocality: site.address.city,
+    addressRegion: site.address.state,
+    postalCode: site.address.postalCode,
+    addressCountry: "BR",
+  },
+  telephone: `+${site.whatsappNumber}`,
+  sameAs: [site.instagramUrl],
+};
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={site.description} />
+    <meta name="theme-color" content="#09090a" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={site.description} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <!-- Marca o documento antes da pintura para o scroll reveal não piscar -->
+    <script is:inline>document.documentElement.classList.add("js");</script>
+    <!-- Clique em "Agende seu horário" antes do fluxo carregar: guarda e abre assim que ele estiver pronto -->
+    <script is:inline>
+      document.addEventListener(
+        "click",
+        function (e) {
+          var t = e.target.closest && e.target.closest("[data-booking-open]");
+          if (t && !window.__bookingReady) {
+            e.preventDefault();
+            window.__bookingQueued = true;
+            // Se o fluxo não carregar (sem internet boa, erro), segue para o WhatsApp
+            setTimeout(function () {
+              if (!window.__bookingReady) location.href = t.href;
+            }, 5000);
+          }
+        },
+        true,
+      );
+    </script>
+  </head>
+  <body class="min-h-[100dvh] overflow-x-clip pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
+    <slot />
+    <script src="../scripts/interactions.ts"></script>
+  </body>
+</html>

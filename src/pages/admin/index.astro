@@ -1,0 +1,352 @@
+---
+// Painel do barbeiro: agenda do dia, cancelamentos e bloqueios de horário.
+import "../../styles/global.css";
+import { Icon } from "astro-icon/components";
+import Logo from "../../components/Logo.astro";
+import { formatPrice, professionals } from "../../data/booking";
+import { site } from "../../data/site";
+import { adminConfigured, checkPassword, endSession, isAdmin, startSession } from "../../lib/auth";
+import { db } from "../../lib/db";
+import { addDays, formatDateTitle, isHHMM, isIsoDate, nowInZone, toHHMM, toMin } from "../../lib/time";
+
+export const prerender = false;
+
+const { request, cookies, url } = Astro;
+const today = nowInZone().date;
+const secure = url.protocol === "https:";
+let loginError = "";
+
+// ---------- Ações (formulários) ----------
+if (request.method === "POST") {
+  // Só aceita formulários enviados deste próprio site
+  const origin = request.headers.get("origin");
+  if (origin && origin !== url.origin) return new Response("Origem inválida", { status: 403 });
+
+  const form = await request.formData();
+  const action = String(form.get("action") ?? "");
+  const back = String(form.get("back") ?? "/admin");
+
+  if (action === "login") {
+    if (await checkPassword(String(form.get("password") ?? ""))) {
+      await startSession(cookies, secure);
+      return Astro.redirect("/admin", 303);
+    }
+    loginError = "Senha incorreta.";
+  } else if (!(await isAdmin(cookies))) {
+    return Astro.redirect("/admin", 303);
+  } else {
+    const client = await db();
+
+    if (action === "logout") {
+      endSession(cookies);
+      return Astro.redirect("/admin", 303);
+    }
+
+    if (action === "cancel") {
+      await client.execute({
+        sql: "UPDATE bookings SET status = 'cancelled' WHERE id = ?",
+        args: [String(form.get("id"))],
+      });
+    }
+
+    if (action === "block") {
+      const date = form.get("date");
+      const wholeDay = form.get("wholeDay") === "on";
+      const start = form.get("start");
+      const end = form.get("end");
+      const pro = String(form.get("professional") ?? "");
+      if (isIsoDate(date) && (wholeDay || (isHHMM(start) && isHHMM(end) && toMin(start) < toMin(end)))) {
+        await client.execute({
+          sql: "INSERT INTO blocks (id, professional_id, date, start_min, end_min, reason) VALUES (?, ?, ?, ?, ?, ?)",
+          args: [
+            crypto.randomUUID(),
+            professionals.some((p) => p.id === pro) ? pro : null,
+            date,
+            wholeDay ? 0 : toMin(start as string),
+            wholeDay ? 24 * 60 : toMin(end as string),
+            String(form.get("reason") ?? "").slice(0, 80) || null,
+          ],
+        });
+      }
+    }
+
+    if (action === "unblock") {
+      await client.execute({ sql: "DELETE FROM blocks WHERE id = ?", args: [String(form.get("id"))] });
+    }
+
+    return Astro.redirect(back.startsWith("/admin") ? back : "/admin", 303);
+  }
+}
+
+// ---------- Dados da página ----------
+const configured = adminConfigured();
+const loggedIn = configured && (await isAdmin(cookies));
+const day = isIsoDate(url.searchParams.get("d")) ? url.searchParams.get("d")! : today;
+const self = `/admin?d=${day}`;
+
+type Row = Record<string, string | number | null>;
+let bookings: Row[] = [];
+let blocks: Row[] = [];
+let upcoming: Row[] = [];
+
+if (loggedIn) {
+  const client = await db();
+  const [b, bl, up] = await client.batch(
+    [
+      {
+        sql: "SELECT * FROM bookings WHERE date = ? AND status = 'confirmed' ORDER BY start_min",
+        args: [day],
+      },
+      { sql: "SELECT * FROM blocks WHERE date = ? ORDER BY start_min", args: [day] },
+      {
+        sql: `SELECT * FROM bookings WHERE status = 'confirmed' AND date BETWEEN ? AND ?
+              ORDER BY date, start_min LIMIT 30`,
+        args: [today, addDays(today, 14)],
+      },
+    ],
+    "read",
+  );
+  bookings = b.rows as unknown as Row[];
+  blocks = bl.rows as unknown as Row[];
+  upcoming = up.rows as unknown as Row[];
+}
+
+const proName = (id: unknown) => professionals.find((p) => p.id === id)?.name ?? "Todos";
+const fmtPhone = (d: string) =>
+  d.length === 11 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}` : `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+const waLink = (b: Row, text: string) =>
+  `https://wa.me/55${b.customer_phone}?text=${encodeURIComponent(text)}`;
+const dayTotal = bookings.reduce((sum, b) => sum + Number(b.price), 0);
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#09090a" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Agenda | {site.name}</title>
+  </head>
+  <body class="min-h-[100dvh] pb-16">
+    <header class="border-b border-ink-700">
+      <div class="mx-auto flex h-16 max-w-3xl items-center justify-between px-4">
+        <a href="/admin"><Logo /></a>
+        {
+          loggedIn && (
+            <form method="post">
+              <input type="hidden" name="action" value="logout" />
+              <button class="min-h-11 px-3 text-sm text-mist hover:text-gold-300">Sair</button>
+            </form>
+          )
+        }
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-3xl px-4 pt-8">
+      {
+        !configured && (
+          <div class="border border-gold-500/40 bg-ink-850 p-6">
+            <h1 class="font-display text-2xl text-bone">Painel ainda não configurado</h1>
+            <p class="mt-3 text-mist">
+              Defina a variável <code class="text-gold-300">ADMIN_PASSWORD</code> no arquivo <code class="text-gold-300">.env</code>{" "}
+              (no computador) ou nas variáveis de ambiente da Vercel, e recarregue a página.
+            </p>
+          </div>
+        )
+      }
+
+      {
+        configured && !loggedIn && (
+          <form method="post" class="mx-auto mt-10 flex max-w-sm flex-col gap-4">
+            <h1 class="font-display text-3xl text-bone">Agenda</h1>
+            <input type="hidden" name="action" value="login" />
+            <div class="flex flex-col gap-2">
+              <label for="password" class="text-sm font-medium text-bone">
+                Senha
+              </label>
+              <input id="password" name="password" type="password" autocomplete="current-password" required class="booking-input" />
+              {loginError && <p class="text-sm text-red-300">{loginError}</p>}
+            </div>
+            <button class="btn-gold min-h-13">Entrar</button>
+          </form>
+        )
+      }
+
+      {
+        loggedIn && (
+          <>
+            {/* Navegação por dia */}
+            <div class="flex items-center justify-between gap-2">
+              <a href={`/admin?d=${addDays(day, -1)}`} class="grid size-12 place-items-center border border-ink-700 hover:border-gold-400" aria-label="Dia anterior">
+                <Icon name="ph:caret-left" class="size-5" />
+              </a>
+              <div class="text-center">
+                <h1 class="font-display text-2xl text-bone">{formatDateTitle(day)}</h1>
+                {day !== today && (
+                  <a href="/admin" class="text-sm text-gold-300 hover:underline">
+                    Voltar para hoje
+                  </a>
+                )}
+              </div>
+              <a href={`/admin?d=${addDays(day, 1)}`} class="grid size-12 place-items-center border border-ink-700 hover:border-gold-400" aria-label="Próximo dia">
+                <Icon name="ph:caret-right" class="size-5" />
+              </a>
+            </div>
+
+            <form method="get" class="mt-4 flex gap-2">
+              <label for="d" class="sr-only">Ir para a data</label>
+              <input id="d" name="d" type="date" value={day} class="booking-input flex-1 [color-scheme:dark]" />
+              <button class="btn-ghost px-5">Ir</button>
+            </form>
+
+            {/* Agendamentos do dia */}
+            <section class="mt-8">
+              <div class="flex items-baseline justify-between">
+                <h2 class="text-lg font-semibold text-bone">
+                  {bookings.length} {bookings.length === 1 ? "agendamento" : "agendamentos"}
+                </h2>
+                {bookings.length > 0 && <p class="text-sm text-mist">Total previsto {formatPrice(dayTotal)}</p>}
+              </div>
+
+              {bookings.length === 0 ? (
+                <p class="mt-4 border border-dashed border-ink-600 p-6 text-center text-mist">Nenhum horário marcado neste dia.</p>
+              ) : (
+                <ul class="mt-4 flex flex-col gap-3">
+                  {bookings.map((b) => (
+                    <li class="border border-ink-700 bg-ink-850 p-4">
+                      <div class="flex items-start justify-between gap-4">
+                        <div>
+                          <p class="font-display text-2xl text-gold-300">
+                            {toHHMM(Number(b.start_min))}
+                            <span class="text-base text-mist"> até {toHHMM(Number(b.end_min))}</span>
+                          </p>
+                          <p class="mt-1 font-semibold text-bone">{b.customer_name}</p>
+                          <p class="text-sm text-mist">
+                            {b.service_name} · {formatPrice(Number(b.price))}
+                            {professionals.length > 1 && <> · {proName(b.professional_id)}</>}
+                          </p>
+                        </div>
+                        <a
+                          href={waLink(b, `Olá, ${String(b.customer_name).split(" ")[0]}! Aqui é da ${site.name}.`)}
+                          target="_blank"
+                          rel="noopener"
+                          class="flex min-h-11 shrink-0 items-center gap-1.5 text-sm text-bone hover:text-gold-300"
+                        >
+                          <Icon name="ph:whatsapp-logo" class="size-5" />
+                          {fmtPhone(String(b.customer_phone))}
+                        </a>
+                      </div>
+                      <form method="post" class="mt-3 border-t border-ink-700 pt-3">
+                        <input type="hidden" name="action" value="cancel" />
+                        <input type="hidden" name="id" value={b.id} />
+                        <input type="hidden" name="back" value={self} />
+                        <button
+                          class="min-h-11 text-sm text-red-300 hover:underline"
+                          onclick={`return confirm(${JSON.stringify(`Cancelar o horário de ${b.customer_name}? Ele volta a ficar livre no site.`)})`}
+                        >
+                          Cancelar horário
+                        </button>
+                      </form>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+
+            {/* Bloqueios */}
+            <section class="mt-12">
+              <h2 class="text-lg font-semibold text-bone">Bloquear horário</h2>
+              <p class="mt-1 text-sm text-mist">Folga, compromisso ou cliente marcado por fora. O período some do site.</p>
+
+              {blocks.length > 0 && (
+                <ul class="mt-4 flex flex-col gap-2">
+                  {blocks.map((bl) => (
+                    <li class="flex items-center justify-between gap-4 border border-ink-700 bg-ink-850 px-4 py-2">
+                      <p class="text-sm text-bone">
+                        {Number(bl.start_min) === 0 && Number(bl.end_min) === 1440
+                          ? "Dia inteiro"
+                          : `${toHHMM(Number(bl.start_min))} até ${toHHMM(Number(bl.end_min))}`}
+                        <span class="text-mist">
+                          {professionals.length > 1 && <> · {proName(bl.professional_id)}</>}
+                          {bl.reason && <> · {bl.reason}</>}
+                        </span>
+                      </p>
+                      <form method="post">
+                        <input type="hidden" name="action" value="unblock" />
+                        <input type="hidden" name="id" value={bl.id} />
+                        <input type="hidden" name="back" value={self} />
+                        <button class="min-h-11 text-sm text-gold-300 hover:underline">Liberar</button>
+                      </form>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <form method="post" class="mt-4 grid grid-cols-2 gap-3 border border-ink-700 p-4">
+                <input type="hidden" name="action" value="block" />
+                <input type="hidden" name="back" value={self} />
+                <div class="col-span-2 flex flex-col gap-2">
+                  <label for="b-date" class="text-sm text-bone">Data</label>
+                  <input id="b-date" name="date" type="date" value={day} required class="booking-input [color-scheme:dark]" />
+                </div>
+                <div class="flex flex-col gap-2">
+                  <label for="b-start" class="text-sm text-bone">Das</label>
+                  <input id="b-start" name="start" type="time" step="1800" value="12:00" class="booking-input [color-scheme:dark]" />
+                </div>
+                <div class="flex flex-col gap-2">
+                  <label for="b-end" class="text-sm text-bone">Até</label>
+                  <input id="b-end" name="end" type="time" step="1800" value="13:00" class="booking-input [color-scheme:dark]" />
+                </div>
+                <label class="col-span-2 flex min-h-11 items-center gap-3 text-sm text-bone">
+                  <input type="checkbox" name="wholeDay" class="size-5 accent-[#d8b872]" />
+                  Bloquear o dia inteiro
+                </label>
+                {professionals.length > 1 && (
+                  <div class="col-span-2 flex flex-col gap-2">
+                    <label for="b-pro" class="text-sm text-bone">Profissional</label>
+                    <select id="b-pro" name="professional" class="booking-input">
+                      <option value="">Todos</option>
+                      {professionals.map((p) => (
+                        <option value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div class="col-span-2 flex flex-col gap-2">
+                  <label for="b-reason" class="text-sm text-bone">Motivo (opcional)</label>
+                  <input id="b-reason" name="reason" maxlength="80" class="booking-input" />
+                </div>
+                <button class="btn-ghost col-span-2">Bloquear</button>
+              </form>
+            </section>
+
+            {/* Próximos dias */}
+            <section class="mt-12">
+              <h2 class="text-lg font-semibold text-bone">Próximos 14 dias</h2>
+              {upcoming.length === 0 ? (
+                <p class="mt-3 text-sm text-mist">Nenhum agendamento.</p>
+              ) : (
+                <ul class="mt-4 divide-y divide-ink-700 border-y border-ink-700">
+                  {upcoming.map((b) => (
+                    <li>
+                      <a href={`/admin?d=${b.date}`} class="flex min-h-12 items-center justify-between gap-4 py-2 hover:text-gold-300">
+                        <span class="text-sm text-bone">
+                          {formatDateTitle(String(b.date))}, {toHHMM(Number(b.start_min))}
+                        </span>
+                        <span class="truncate text-sm text-mist">
+                          {b.customer_name} · {b.service_name}
+                        </span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </>
+        )
+      }
+    </main>
+  </body>
+</html>

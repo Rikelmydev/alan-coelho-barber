@@ -1,0 +1,35 @@
+---
+// Botão único de agendamento, usado em todos os CTAs da página. Abre o fluxo de agendamento.
+// Sem JavaScript, o link cai no WhatsApp da barbearia.
+import { Icon } from "astro-icon/components";
+import { whatsappUrl } from "../data/site";
+
+interface Props {
+  variant?: "gold" | "ghost";
+  size?: "md" | "lg";
+  pulse?: boolean;
+  class?: string;
+}
+const { variant = "gold", size = "md", pulse = false, class: className = "" } = Astro.props;
+const lg = size === "lg";
+---
+
+{
+  pulse ? (
+    <span class:list={["btn-pulse", className]}>
+      <a href={whatsappUrl} data-booking-open class:list={["btn-gold w-full", lg && "min-h-14 px-9 text-base"]}>
+        <Icon name="ph:calendar-check" class={lg ? "size-6" : "size-5"} aria-hidden="true" />
+        Agende seu horário
+      </a>
+    </span>
+  ) : (
+    <a
+      href={whatsappUrl}
+      data-booking-open
+      class:list={[variant === "gold" ? "btn-gold" : "btn-ghost", lg && "min-h-14 px-9 text-base", className]}
+    >
+      <Icon name="ph:calendar-check" class={lg ? "size-6" : "size-5"} aria-hidden="true" />
+      Agende seu horário
+    </a>
+  )
+}
